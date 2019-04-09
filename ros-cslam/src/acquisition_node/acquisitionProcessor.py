@@ -239,6 +239,9 @@ class acquisitionProcessor():
                 try:
                     image = np.copy(outputDict['rect_image'])
 
+                    # Put the ROI
+                    cv2.rectangle(image, (ir.validPixROI[0], ir.validPixROI[1]), (ir.validPixROI[0]+ir.validPixROI[2], ir.validPixROI[1]+ir.validPixROI[3]),(0, 255, 0), 2)
+
                     # Put the AprilTag bound boxes and numbers to the image
                     for tag in outputDict["apriltags"]:
                         for idx in range(len(tag["corners"])):
@@ -257,6 +260,7 @@ class acquisitionProcessor():
                                 fontScale=0.6,
                                 color=(0, 255, 0))
 
+
                     # Add the original and diagnostic info to the outputDict
                     outputDict["test_stream_image"] = self.bridge.cv2_to_compressed_imgmsg(image, dst_format='png')
                     outputDict["test_stream_image"].header.stamp.secs = currRawImage.header.stamp.secs
@@ -266,7 +270,7 @@ class acquisitionProcessor():
                     outputDict["raw_image"] = self.lastCameraImage
                     outputDict["raw_camera_info"] = self.lastCameraInfo
 
-                    outputDict["rectified_image"] = self.bridge.cv2_to_compressed_imgmsg(outputDict["rect_image"], dst_format='png')
+                    outputDict["rectified_image"] = self.bridge.cv2_to_compressed_imgmsg(outputDict["cleared_image"], dst_format='png')
                     outputDict["rectified_image"].header.stamp.secs = currRawImage.header.stamp.secs
                     outputDict["rectified_image"].header.stamp.nsecs = currRawImage.header.stamp.nsecs
                     outputDict["rectified_image"].header.frame_id = self.ACQ_DEVICE_NAME
@@ -344,6 +348,8 @@ class deviceSideProcessor():
             # 4. Package output
             outputDict = dict()
             outputDict["rect_image"] = rect_image
+            outputDict["cleared_image"] = self.ImageRectifier(rect_image)
+            outputDict["ROI"] = self.ImageRectifier.validPixROI
             outputDict["new_camera_matrix"] = newCameraMatrix
             outputDict["apriltags"] = list()
             for atag in tags:

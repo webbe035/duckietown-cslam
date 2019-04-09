@@ -35,6 +35,13 @@ class ImageRectifier():
 
         return remappedIm, self.newCameraMatrix
 
+    def removeLowConfidenceAreas(self, image):
+        """Covers in black all parts of the image that are outside the ROI"""
+        clearedIm = 0*image
+        clearedIm[self.validPixROI[1]:self.validPixROI[1]+self.validPixROI[3], self.validPixROI[0]:self.validPixROI[0]+self.validPixROI[2]] = image[self.validPixROI[1]:self.validPixROI[1]+self.validPixROI[3], self.validPixROI[0]:self.validPixROI[0]+self.validPixROI[2]]
+
+        return clearedIm
+
     def beautify(self, image):
         """
         Applies CLAHE (Contrast Limited Adaptive Histogram Equalization) to a RGB or grayscale image in order to improve the contrast
@@ -71,6 +78,7 @@ if __name__ == "__main__":
     rectIm, newCameraMatrix = imRect.rectify(im)
     print(newCameraMatrix)
     status = cv2.imwrite('test_image_rectifier_img_after.png',rectIm)
+    status = cv2.imwrite('test_image_rectifier_img_after_cleared.png',imRect.removeLowConfidenceAreas(imRect.beautify(rectIm)))
 
     # write the beautified images
     status = cv2.imwrite('test_image_rectifier_img_after_beautified_color.png',imRect.beautify(rectIm))
