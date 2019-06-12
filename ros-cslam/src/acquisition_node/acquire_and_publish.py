@@ -36,16 +36,17 @@ ACQ_ROS_MASTER_URI_SERVER_PORT = os.getenv('ACQ_ROS_MASTER_URI_SERVER_PORT', "")
 
 
 # Define the two concurrent processes:
-def runDeviceSideProcess(ROS_MASTER_URI, outputDictQueue, quitEvent):
+def runDeviceSideProcess(ROS_MASTER_URI, quitEvent):
     """
     Receive and process data from the remote device (Duckiebot or watchtower).
     """
     logger.info('Device side processor starting in LIVE mode')
+
     os.environ['ROS_MASTER_URI'] = ROS_MASTER_URI
     ap = acquisitionProcessor(logger, mode="live")
     ap.liveUpdate(outputDictQueue, quitEvent)
 
-def runServerSideProcess(ROS_MASTER_URI, outpuDictQueue, quitEvent):
+def runServerSideProcess(ROS_MASTER_URI, quitEvent):
     """
     Publush the processed data to the ROS Master that the graph optimizer uses.
     """
@@ -68,18 +69,18 @@ if __name__ == '__main__':
 
 
     # outputDictQueue is used to pass data between the two processes
-    outputDictQueue = multiprocessing.Queue(maxsize=20)
+    outputDictQueue = multiprocessing.Queue(maxsize=40)
 
     # Start the processes
 
     deviceSideProcess = multiprocessing.Process(target=runDeviceSideProcess,
-                                                args=(ros_master_uri_device,outputDictQueue,quitEvent),
+                                                args=(ros_master_uri_device,quitEvent),
                                                 name="deviceSideProcess")
     deviceSideProcess.start()
 
 
     serverSideProcess = multiprocessing.Process(target=runServerSideProcess,
-                                                args=(ros_master_uri_server,outputDictQueue,quitEvent),
+                                                args=(ros_master_uri_server,quitEvent),
                                                 name="serverSideProcess")
     serverSideProcess.start()
 
