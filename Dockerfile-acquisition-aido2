@@ -23,19 +23,11 @@ RUN apt-get install -y --allow-unauthenticated python-pip; pip install pathos mu
 COPY ${acquisition_src_dir}/acquisition_node/acquisitionProcessor.py /acquisition_node
 COPY ${acquisition_src_dir}/acquisition_node/serverSidePublisher.py /acquisition_node
 COPY ${acquisition_src_dir}/acquisition_node/acquire_and_publish.py /acquisition_node
+COPY ${acquisition_src_dir}/acquisition_node/set_environment.sh /acquisition_node
 RUN chmod +x /acquisition_node/*.py
-
-ENV ACQ_POSES_UPDATE_RATE 10
-ENV ACQ_TOPIC_RAW camera_node/image/compressed
-ENV ACQ_DEVICE_MODE live
-ENV ACQ_SERVER_MODE live
-ENV ACQ_DEVICE_NAME watchtower01
-ENV ACQ_ROS_MASTER_URI_DEVICE_IP 192.168.1.30
-ENV ACQ_ROS_MASTER_URI_DEVICE_PORT 11311
-ENV ACQ_ROS_MASTER_URI_SERVER_IP 192.168.1.70
-ENV ACQ_ROS_MASTER_URI_SERVER_PORT 11311
+RUN chmod +x /acquisition_node/*.sh
 
 RUN [ "cross-build-end" ]
 
 # Start the processes
-CMD /bin/bash -c "cd /acquisition_node; source /opt/ros/kinetic/setup.bash; python acquire_and_publish.py"
+CMD /bin/bash -c "cd /acquisition_node; source /opt/ros/kinetic/setup.bash; source ./set_environment.sh; python acquire_and_publish.py"

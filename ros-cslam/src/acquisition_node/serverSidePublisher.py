@@ -32,14 +32,11 @@ def publishOnServer(outputDictQueue, quitEvent, logger, mode='live'):
     while not quitEvent.is_set():
         try:
             newQueueData = outputDictQueue.get(block=True, timeout=5)
-            # logger.info("Backlog of messages to send: %d messages" % outputDictQueue.qsize())
             incomingData = pickle.loads(newQueueData)
             if "image_stream" in incomingData:
                 imgMsg = incomingData["image_stream"]
                 imgMsg.header.seq = seq_stamper
-                logger.info(imgMsg.header)
                 publisherImages.publish(imgMsg)
-                logger.info("Published")
             seq_stamper+=1
 
         except KeyboardInterrupt:
