@@ -79,7 +79,7 @@ class acquisitionProcessor():
                 else:
                     break
 
-    def liveUpdate(self, outputDictQueue, quitEvent):
+    def liveUpdate(self, outputDictQueue, inputDictQueue, quitEvent):
         """
         Runs constantly and processes new data as it comes.
         """
@@ -91,7 +91,7 @@ class acquisitionProcessor():
                         # Collect latest ros_data
                         outputDict = dict()
 
-                        outputDict['image_stream']=image
+                        outputDict['imageStream']=image
                         if self.mask is not None and self.debug:
                             outputDict['mask']=self.mask
                             outputDict['maskNorm']=self.maskNorm
@@ -101,3 +101,17 @@ class acquisitionProcessor():
                                                 timeout=None)
                             self.lastImageProcessed = True
                     self.imageCompressedList=[]
+            try:
+                newQueueData = inputDictQueue.get(block=False)
+                incomingData = pickle.loads(newQueueData)
+                if "requestImage" in incomingData:
+                    imgMsg = incomingData["requestImage"]
+                    self.publishImages = True
+
+            except KeyboardInterrupt:
+                raise( Exception("Exiting") )
+            except Queue.Empty:
+                pass
+            except Exception as e:
+                logger.warning("Exception: %s" % str(e))
+                pass

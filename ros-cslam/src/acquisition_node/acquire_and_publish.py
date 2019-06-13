@@ -18,7 +18,7 @@ import numpy as np
 import math
 
 from acquisitionProcessor import acquisitionProcessor
-from serverSidePublisher import publishOnServer
+from serverSidePublisher import publishingProcessor
 
 # IMPORT THE ENVIRONMENT VARIABLES (DEPENDING ON THE MODE)
 ACQ_DEVICE_MODE = os.getenv('ACQ_DEVICE_MODE', 'live')
@@ -44,7 +44,7 @@ def runDeviceSideProcess(ROS_MASTER_URI, quitEvent):
 
     os.environ['ROS_MASTER_URI'] = ROS_MASTER_URI
     ap = acquisitionProcessor(logger, mode="live")
-    ap.liveUpdate(outputDictQueue, quitEvent)
+    ap.liveUpdate(outputDictQueue, inputDictQueue, quitEvent)
 
 def runServerSideProcess(ROS_MASTER_URI, quitEvent):
     """
@@ -52,7 +52,8 @@ def runServerSideProcess(ROS_MASTER_URI, quitEvent):
     """
     logger.info('Server side processor starting in LIVE mode')
     os.environ['ROS_MASTER_URI'] = ROS_MASTER_URI
-    publishOnServer(outputDictQueue, quitEvent, logger, mode='live')
+    pp = publishingProcessor(logger, mode="live")
+    pp.publishOnServer(outputDictQueue, inputDictQueue, quitEvent, logger, mode='live')
 
 if __name__ == '__main__':
     """
@@ -70,6 +71,7 @@ if __name__ == '__main__':
 
     # outputDictQueue is used to pass data between the two processes
     outputDictQueue = multiprocessing.Queue(maxsize=40)
+    inputDictQueue = multiprocessing.Queue(maxsize=10)
 
     # Start the processes
 
