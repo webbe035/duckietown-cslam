@@ -71,8 +71,10 @@ class publishingProcessor():
                                         block=True,
                                         timeout=None)
                     self.requestImageSend = False
+                self.logger.info("Request send")
 
 
     def requestImage(self, data):
+        self.logger.info("Topic received")
         if data.data:
             self.requestImageSend = True

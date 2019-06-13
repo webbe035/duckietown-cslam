@@ -36,6 +36,7 @@ class acquisitionProcessor():
         self.bridge = CvBridge()
         self.mask = None
         self.cvImage = None
+        self.newMaskNorm = False
         self.maskNorm = 0
         self.previousCvImage = None
         self.logger.info('Acquisition processor is set up.')
@@ -54,6 +55,7 @@ class acquisitionProcessor():
             maskedImage = cv2.absdiff(self.previousCvImage, self.cvImage)
             _, maskedImage = cv2.threshold(maskedImage, 30, 255, cv2.THRESH_BINARY)
             self.maskNorm = cv2.norm(maskedImage)
+            self.newMaskNorm = True
             if self.debug:
                 self.mask = self.bridge.cv2_to_compressed_imgmsg(maskedImage, dst_format='png')
                 self.mask.header=currRawImage.header
@@ -85,26 +87,33 @@ class acquisitionProcessor():
         """
         while not quitEvent.is_set():
             # Check if the last image data was not yet processed and if it's time to process it (in order to sustain the deisred update rate)
+            outputDict = dict()
             if self.publishImages:
                 with self.listLock:
                     for image in self.imageCompressedList:
                         # Collect latest ros_data
-                        outputDict = dict()
-
                         outputDict['imageStream']=image
-                        if self.mask is not None and self.debug:
-                            outputDict['mask']=self.mask
-                            outputDict['maskNorm']=self.maskNorm
                         if outputDict is not None:
                             outputDictQueue.put(obj=pickle.dumps(outputDict, protocol=-1),
                                                 block=True,
                                                 timeout=None)
                             self.lastImageProcessed = True
                     self.imageCompressedList=[]
+            if self.newMaskNorm:
+                self.newMaskNorm = False
+                outputDict['maskNorm']=self.maskNorm
+                if self.mask is not None and self.debug:
+                    outputDict['mask']=self.mask
+                if outputDict is not None:
+                    outputDictQueue.put(obj=pickle.dumps(outputDict, protocol=-1),
+                                        block=True,
+                                        timeout=None)
+
             try:
                 newQueueData = inputDictQueue.get(block=False)
                 incomingData = pickle.loads(newQueueData)
                 if "requestImage" in incomingData:
+                    self.logger.info("Request received")
                     imgMsg = incomingData["requestImage"]
                     self.publishImages = True
 
