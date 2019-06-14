@@ -20,13 +20,12 @@ class publishingProcessor():
         self.requestImageSend = False
 
         self.ACQ_DEVICE_NAME = os.getenv('ACQ_DEVICE_NAME', "watchtower33")
+        rospy.init_node('acquisition_node_'+self.ACQ_DEVICE_NAME)
 
         self.publisherImagesSparse = rospy.Publisher("/"+self.ACQ_DEVICE_NAME+"/imageSparse/compressed", CompressedImage, queue_size=20)
         self.publisherMask = rospy.Publisher("/"+self.ACQ_DEVICE_NAME+"/mask/compressed", CompressedImage, queue_size=1)
         self.publisherMaskNorm = rospy.Publisher("/"+self.ACQ_DEVICE_NAME+"/maskNorm", Float32, queue_size=1)
         self.subscriberRawImage = rospy.Subscriber('/'+self.ACQ_DEVICE_NAME+'/'+"requestImage", Bool, self.requestImage,  queue_size = 1)
-
-        rospy.init_node('acquisition_node_'+self.ACQ_DEVICE_NAME)
 
         self.logger.info("Setting up the server side process completed. Waiting for messages...")
 
